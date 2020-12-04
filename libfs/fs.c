@@ -93,7 +93,7 @@ int getRootFree(){
     return count;
 }
 
-int fileInRoot(char *filename){
+int fileInRoot(const char *filename){
         for(int i = 0; i < FS_FILE_MAX_COUNT; i++){
                 if (strcmp(root.entries[i].filename, filename) == 0){
                         return 0;
@@ -128,7 +128,7 @@ int nextOpen(void){
                 return 0;
 }
 
-int openFile(char *filename){
+int openFile(const char *filename){
         for (int i = 0; i < OPEN_FILES_MAX; i++){
                 if (strcmp(openFds[i].filename, filename) == 0){
                         return i;
@@ -267,21 +267,18 @@ int fs_info(void)
 
 int fs_create(const char *filename){
     // make sure filename is not too long
-    if(strlen(filename) > FS_FILENAME_LEN){
-        printf("filename is too large, filename length is: %d\n", strlen(filename));
+    if(strlen(filename) > FS_FILENAME_LEN)
         return -1;
-    }
+    
     for(int i = 0; i < FS_FILE_MAX_COUNT; i++){
         // make sure no duplicate filenames
-         if (strcmp(root.entries[i].filename,filename)==0){
-            printf("Filename already exists\n");
+         if (strcmp(root.entries[i].filename,filename)==0)
             return -1;
-        }
+        
     }
-                if(getRootFree() == 0){
-                        printf("too many files in root\n");
-                        return -1;
-                }
+    if(getRootFree() == 0){
+            return -1;
+    }
     for(int i = 0; i < FS_FILE_MAX_COUNT; i++){
         if(root.entries[i].filename[0] == '\0'){
 //                                              creat(filename, 0644);
@@ -330,7 +327,7 @@ int clearFat(int index){
 
 int fs_delete(const char *filename)
 {
-    int index = 0;
+    //int index = 0;
     // make sure filename passed is not too large
                 if(filename == NULL){
                         printf("filename is invalid\n");
@@ -369,8 +366,8 @@ int fs_ls(void)
     for(int i = 0; i < FS_FILE_MAX_COUNT; i++){
         if (root.entries[i].index != 0){
             printf("file: %s, ", root.entries[i].filename);
-            printf("size: %ld, ", root.entries[i].size);
-            printf("data_blk: %ld\n", root.entries[i].index);
+            printf("size: %d, ", root.entries[i].size);
+            printf("data_blk: %d\n", root.entries[i].index);
         }
     }
     return 0;
@@ -387,15 +384,12 @@ int fs_open(const char *filename)
 
                 //printFdDir();
     if((strlen(filename) > FS_FILENAME_LEN)){
-        printf("filename is too large, filename length is: %d\n", sizeof(filename));
         return -1;
     }
                 if(getOpenFree() == 0){
-                        printf("too many open files ya nerd\n");
                         return -1;
                 }
                 if(fileInRoot(filename) != 0){
-                        printf("No file named %s in root\n", filename);
                         return -1;
                 }
     int fd;
@@ -408,7 +402,6 @@ int fs_open(const char *filename)
             //    printf("error, too many open files\n");
             //    return -1;
             //}
-                                                int count = getOpenFree();
                                                 //printf("open files left is: %d\n", count);
             struct fileDescriptor* newFd = (struct fileDescriptor*)malloc(sizeof(struct fileDescriptor*));
             newFd->fd = fd;
@@ -474,6 +467,7 @@ int fs_stat(int fd){
             return st.st_size;
         }
     }
+    return -1;
 }
 int fs_lseek(int fd, size_t offset){
     for(int i = 0; i < FS_FILE_MAX_COUNT; i++){
