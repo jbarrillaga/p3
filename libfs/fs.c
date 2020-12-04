@@ -72,62 +72,6 @@ int getFat(int off, int blk){
     return blk;
 }
 
-int fs_mount(const char *diskname)
-{
-    if (block_disk_open(diskname)){
-        perror("disk_open");
-        return -1;
-    }
-    if (block_read(0, &sb) < 0){
-        perror("sb read");
-        return -1;
-    }
-
-    //fats = malloc(sb.fat_blk_count * sizeof(struct fat));
-
-    for (int i=0; i<sb.fat_blk_count; i++){
-        if (block_read(i+1, &fats) < 0){
-            perror("fat read");
-            return -1;
-        }
-    }
-    if (block_read(sb.rdir_blk, &root) < 0){
-        perror("root read");
-        return -1;
-    }
-                fats.entries[0] = 0xFFFF;
-    return 0;
-}
-
-int fs_umount(void){
-    if (block_write(0, &sb) < 0){
-        perror("sb write");
-        return -1;
-    }
-
-    for (int i=0; i<sb.fat_blk_count; i++){
-        if (block_write(i+1, &fats) < 0){
-            perror("fat write");
-            return -1;
-        }
-    }
-    //free(fats);
-
-    if (block_write(sb.rdir_blk, &root) < 0){
-        perror("root write");
-        return -1;
-    }
-                if(getOpenFree() < 32){
-                        printf("error, open files remain in disk system\n");
-                        return -1;
-                }
-    if(block_disk_close() < 0){
-                        printf("No mounted file system\n");
-                        return -1;
-                }
-
-    return 0;
-}
 
 int getFatFree(){
                 int count = 0;
@@ -222,6 +166,85 @@ void printFdDir(void){
                 }
                 closedir(d);
         }
+}
+
+
+int nextFreeFat(){
+    for (int i=0; i<sb.data_blk_count; i++){
+        if (fats.entries[i] == 0)
+            return 0;
+    }
+    return -1;
+}
+
+void addFats(int blk, int numBlks){
+   int count;
+   while (fats.entries[blk] != 0xFFFF){
+       blk = fats.entries[blk];
+       count++;
+   }
+    for (int i=0; i<numBlks-count; i++){
+        fats.entries[blk] = nextFreeFat();
+        blk = fats.entries[blk];
+    }
+}
+
+
+int fs_mount(const char *diskname)
+{
+    if (block_disk_open(diskname)){
+        perror("disk_open");
+        return -1;
+    }
+    if (block_read(0, &sb) < 0){
+        perror("sb read");
+        return -1;
+    }
+
+    //fats = malloc(sb.fat_blk_count * sizeof(struct fat));
+
+    for (int i=0; i<sb.fat_blk_count; i++){
+        if (block_read(i+1, &fats) < 0){
+            perror("fat read");
+            return -1;
+        }
+    }
+    if (block_read(sb.rdir_blk, &root) < 0){
+        perror("root read");
+        return -1;
+    }
+                fats.entries[0] = 0xFFFF;
+    return 0;
+}
+
+int fs_umount(void){
+    if (block_write(0, &sb) < 0){
+        perror("sb write");
+        return -1;
+    }
+
+    for (int i=0; i<sb.fat_blk_count; i++){
+        if (block_write(i+1, &fats) < 0){
+            perror("fat write");
+            return -1;
+        }
+    }
+    //free(fats);
+
+    if (block_write(sb.rdir_blk, &root) < 0){
+        perror("root write");
+        return -1;
+    }
+                if(getOpenFree() < 32){
+                        printf("error, open files remain in disk system\n");
+                        return -1;
+                }
+    if(block_disk_close() < 0){
+                        printf("No mounted file system\n");
+                        return -1;
+                }
+
+    return 0;
 }
 
 int fs_info(void)
@@ -462,26 +485,6 @@ int fs_lseek(int fd, size_t offset){
     return -1;
 }
 
-int nextFreeFat(){
-    for (int i=0; i<sb.data_blk_count; i++){
-        if (fats.entries[i] == 0)
-            return 0;
-    }
-    return -1;
-}
-
-void addFats(int blk, int numBlks){
-   int count;
-   while (fats.entries[blk] != 0xFFFF){
-       blk = fats.entries[blk];
-       count++;
-   }
-    for (int i=0; i<numBlks-count; i++){
-        fats.entries[blk] = nextFreeFat();
-        blk = fats.entries[blk];
-    }
-}
-
 int fs_write(int fd, void *buf, size_t count){
     if(fd >= (OPEN_FILES_MAX+5)){
         printf("File Descriptor is out of bounds\n");
@@ -559,5 +562,3 @@ int fs_read(int fd, void *buf, size_t count){
     openFds[ind].offset += count;
     return count;
 }
-
-
