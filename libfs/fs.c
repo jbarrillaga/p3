@@ -128,7 +128,7 @@ int nextOpen(void){
                 return 0;
 }
 
-int openFile(char *filename){
+int openFile(const char *filename){
         for (int i = 0; i < OPEN_FILES_MAX; i++){
                 if (strcmp(openFds[i].filename, filename) == 0){
                         return i;
@@ -538,5 +538,3 @@ int fs_read(int fd, void *buf, size_t count){
     openFds[ind].offset += count;
     return count;
 }
-
-
