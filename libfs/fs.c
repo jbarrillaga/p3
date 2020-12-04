@@ -128,7 +128,7 @@ int nextOpen(void){
                 return 0;
 }
 
-int openFile(const char *filename){
+int openFile(char *filename){
         for (int i = 0; i < OPEN_FILES_MAX; i++){
                 if (strcmp(openFds[i].filename, filename) == 0){
                         return i;
@@ -236,11 +236,9 @@ int fs_umount(void){
         return -1;
     }
                 if(getOpenFree() < 32){
-                        printf("error, open files remain in disk system\n");
                         return -1;
                 }
     if(block_disk_close() < 0){
-                        printf("No mounted file system\n");
                         return -1;
                 }
 
@@ -250,7 +248,6 @@ int fs_umount(void){
 int fs_info(void)
 {
                 if(block_disk_count() < 0){
-                        printf("no filesystem\n");
                         return -1;
                 }
     printf("FS Info:\n");
@@ -315,7 +312,6 @@ int clearFat(int index){
                         check = 0;
                         return 0;
                 }
-                printf("index is: %d, fats.entries[index] is %d\n", i, fats.entries[i]);
                 i = fats.entries[i];
                 fats.entries[i] = 0;
                 if(stop == 10)
@@ -330,18 +326,15 @@ int fs_delete(const char *filename)
     //int index = 0;
     // make sure filename passed is not too large
                 if(filename == NULL){
-                        printf("filename is invalid\n");
                         return -1;
                 }
                 if(openFile(filename) >= 0){
-                        printf("File is currently open, cannot delete\n");
                         return -1;
                 }
 
     for(int i = 0; i < FS_FILE_MAX_COUNT; i++){
         if (strcmp(root.entries[i].filename,filename)==0){
             *root.entries[i].filename = '\0';
-                                                printf("root entry index is %d\n", root.entries[i].index);
                 // Weird behavior from this function
                                                 clearFat(root.entries[i].index);
             root.entries[i].size = 0;
@@ -349,7 +342,6 @@ int fs_delete(const char *filename)
             return 0;
         }
     }
-        printf("No file named %s to delete\n", filename);
     return -1;
 }
 
@@ -357,7 +349,6 @@ int fs_delete(const char *filename)
 int fs_ls(void)
 {
     if(block_disk_count() < 0){
-      printf("no filesystem\n");
       return -1;
     }
                 // not sure if both work
@@ -378,7 +369,6 @@ int fs_ls(void)
 int fs_open(const char *filename)
 {
     if(filename == NULL){
-      printf("filename is invalid\n");
       return -1;
     }
 
@@ -423,13 +413,10 @@ int fs_close(int fd)
     //    return -1;
     //}
                 if(openFdsDescriptorCheck(fd) < 0){
-                        printf("File Descriptor is invalid\n");
                         return -1;
                 }
                 int index = 0;
-                printf("fd in close is: %d\n", fd);
     for (int i = 0; i < OPEN_FILES_MAX; i++){
-                        printf("openFds[%d].fd = %d\n", i, openFds[i].fd);
                         if(openFds[i].fd == fd){
                                 index = i;
                                 break;
@@ -445,7 +432,6 @@ int fs_close(int fd)
     strcpy(openFds[index].filename, empty);
 
     if(close(fd) < 0){
-        printf("Invalid File Descriptor\n");
         return -1;
     }
 
@@ -454,7 +440,6 @@ int fs_close(int fd)
 
 int fs_stat(int fd){
     if(openFdsDescriptorCheck(fd) < 0){
-      printf("File Descriptor is invalid\n");
       return -1;
     }
     for(int i = 0; i < FS_FILE_MAX_COUNT; i++){
@@ -479,7 +464,6 @@ int fs_lseek(int fd, size_t offset){
 
 int fs_write(int fd, void *buf, size_t count){
     if(fd >= (OPEN_FILES_MAX+5)){
-        printf("File Descriptor is out of bounds\n");
         return -1;
     }
     //fs_lseek(fd, fs_stat(fd));
@@ -554,3 +538,5 @@ int fs_read(int fd, void *buf, size_t count){
     openFds[ind].offset += count;
     return count;
 }
+
+
