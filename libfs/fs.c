@@ -407,12 +407,10 @@ int fs_open(const char *filename)
             newFd->fd = fd;
             newFd->offset = 0;
             strcpy(newFd->filename, filename);
-                                                int index = nextOpen();
+            int index = nextOpen();
             openFds[index] = *newFd;
-//            printf("file fd: %d, openFd[%d].fd = %d. Open count is %d\n", fd, index, openFds[index].fd, count);
-                count = getOpenFree();
-            //printf("open files left is: %d\n", count);
-                                                return fd;
+//
+            return fd;
         }
     }
     return -1;
