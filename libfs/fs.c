@@ -299,26 +299,29 @@ int fs_create(const char *filename){
 }
 
 int clearFat(int index){
-        int check = 1;
-        if(index == 0xFFFF)
-                check = 0;
-        int i = index;
-        int stop = 0;
-        while(check == 1){
-                if((fats.entries[i] == 0xFFFF) || (i == 0)){
-                        if(i != 0){
-                                fats.entries[i] = 0;
-                        }
-                        check = 0;
-                        return 0;
-                }
-                i = fats.entries[i];
-                fats.entries[i] = 0;
-                if(stop == 10)
-                        return -1;
-                stop++;
-        }
-        return -1;
+  int check = 1;
+  if(index == 0xFFFF)
+    check = 0;
+  int i = index;
+  int stop = 0;
+  while(check == 1){
+    if((fats.entries[i] == 0xFFFF)){// || (i == 0)){
+      if(i != 0){
+        fats.entries[i] = 0;
+      }
+      check = 0;
+      return 0;
+    }
+    i = fats.entries[i];
+    if(i == 0){
+      return 0;
+    }
+    fats.entries[i] = 0;
+    //if(stop == 10)
+    //  return -1;
+    //stop++;
+  }
+  return -1;
 }
 
 int fs_delete(const char *filename)
